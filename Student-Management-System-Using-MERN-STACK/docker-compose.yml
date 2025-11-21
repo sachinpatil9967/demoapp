@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data:/data/db
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: mern-server
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      MONGODB_URI: mongodb://root:password@mongodb:27017/studentdb?authSource=admin
+      NODE_ENV: production
+    depends_on:
+      - mongodb
+    volumes:
+      - ./server:/app/server
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: mern-client
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+    environment:
+      REACT_APP_API_URL: http://localhost:5000
+
+volumes:
+  mongodb_data:
